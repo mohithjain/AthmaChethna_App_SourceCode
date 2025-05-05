@@ -1,6 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:fluttertoast/fluttertoast.dart';
-import 'forgetpassword.dart'; // ForgetPassword page import kiya hai
+import 'forgetpassword.dart'; // Forgot Password Page Import
+import 'homescreen.dart'; // Home Screen Page Import
+import 'services/storage_service.dart';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -11,11 +16,84 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isPasswordVisible = false;
+  bool _isLoading = false;
 
-  final TextEditingController usernameController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
-  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
+
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final String apiUrl = "http://192.168.31.52:5000/api/auth/login";
+    final Map<String, dynamic> loginData = {
+      "username": usernameController.text.trim(),
+      "email": emailController.text.trim(),
+      "password": passwordController.text.trim(),
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(loginData),
+      );
+
+      print("Response Status Code: ${response.statusCode}");
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        Fluttertoast.showToast(msg: "Logged in successfully!");
+
+        final user = responseData['user'];
+        if (user == null) {
+          print("Error: User object not found in response.");
+          Fluttertoast.showToast(msg: "Error: User data missing in response.");
+          return;
+        }
+
+        // Extract user data
+        //final user = responseData['user'];
+        //if (!user.containsKey('_id')) {
+        //print("Error: 'userId' not found in response.");
+        //Fluttertoast.showToast(msg: "Error: User ID missing in response.");
+        //return;
+        //}
+
+        // Save user details (username, email, password, userId) in secure storage
+        StorageService storageService = StorageService();
+        await storageService.saveLoginDetails(
+          userId: user['_id'],
+          username: user['username'] ?? '',
+          email: user['email'] ?? '',
+          password: passwordController.text.trim(),
+        );
+
+        print("User ID Stored: ${user['_id']}");
+
+        // Navigate to HomeScreen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+      } else {
+        print("Error Message: ${responseData['message']}");
+        Fluttertoast.showToast(msg: responseData['message'] ?? "Login failed");
+      }
+    } catch (error) {
+      print("Exception: $error");
+      Fluttertoast.showToast(msg: "Error: Unable to connect to server.");
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,12 +114,31 @@ class _LoginScreenState extends State<LoginScreen> {
                 _buildMotivationalText(),
                 const SizedBox(height: 30),
                 _buildForm(),
+                const SizedBox(height: 10),
+                _buildForgotPasswordButton(),
                 const SizedBox(height: 25),
-                _buildLoginButton(),
+                _isLoading
+                    ? const CircularProgressIndicator()
+                    : _buildLoginButton(),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLoginButton() {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color.fromARGB(255, 105, 76, 67),
+        padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      onPressed: _login,
+      child: const Text(
+        "Login",
+        style: TextStyle(fontSize: 18, color: Colors.white),
       ),
     );
   }
@@ -115,7 +212,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return const Padding(
       padding: EdgeInsets.symmetric(horizontal: 10),
       child: Text(
-        "There is a hope, even when your brain tells you there isn't",
+        "There is hope, even when your brain tells you there isn't.",
         textAlign: TextAlign.center,
         style: TextStyle(
           fontSize: 18,
@@ -131,97 +228,102 @@ class _LoginScreenState extends State<LoginScreen> {
       key: _formKey,
       child: Column(
         children: [
-          _buildTextField(usernameController, "Username", TextInputType.text, "Username is required"),
-          _buildTextField(phoneController, "Phone Number", TextInputType.phone, "Enter a valid 10-digit number", phoneValidation: true),
-          _buildTextField(emailController, "Email", TextInputType.emailAddress, "Only @bmsce.ac.in emails allowed", emailValidation: true),
+          _buildTextField(
+            usernameController,
+            "Username",
+            TextInputType.text,
+            "Username is required",
+          ),
+          _buildTextField(
+            emailController,
+            "Email",
+            TextInputType.emailAddress,
+            "Only @bmsce.ac.in emails allowed",
+            emailValidation: true,
+          ),
           _buildPasswordField(),
         ],
       ),
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, TextInputType keyboardType, String errorMessage, {bool phoneValidation = false, bool emailValidation = false}) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label,
+    TextInputType inputType,
+    String hint, {
+    bool emailValidation = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15),
       child: TextFormField(
         controller: controller,
-        keyboardType: keyboardType,
+        keyboardType: inputType,
         validator: (value) {
-          if (value == null || value.isEmpty) return errorMessage;
-          if (phoneValidation && !RegExp(r"^[0-9]{10}$").hasMatch(value)) return "Enter a valid 10-digit number";
-          if (emailValidation && !RegExp(r"^[a-zA-Z0-9.]+@bmsce\.ac\.in$").hasMatch(value)) return errorMessage;
+          if (value == null || value.isEmpty) {
+            return "$label is required";
+          }
+          if (emailValidation && !value.endsWith("@bmsce.ac.in")) {
+            return "Only @bmsce.ac.in emails allowed";
+          }
           return null;
         },
-        decoration: _buildTransparentInputDecoration(label),
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hint,
+          labelStyle: const TextStyle(color: Colors.black),
+          border: const UnderlineInputBorder(),
+          contentPadding: const EdgeInsets.symmetric(vertical: 15),
+        ),
       ),
     );
   }
 
   Widget _buildPasswordField() {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 15),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        TextFormField(
-          controller: passwordController,
-          obscureText: !_isPasswordVisible,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return "Password is required";
-            }
-            if (!RegExp(r'^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$')
-                .hasMatch(value)) {
-              return "Password must have at least 6 chars, a letter, a number, and a special char";
-            }
-            return null;
-          },
-          decoration: _buildTransparentInputDecoration("Password").copyWith(
-            suffixIcon: IconButton(
-              icon: Icon(_isPasswordVisible ? Icons.visibility : Icons.visibility_off),
-              onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15),
+      child: TextFormField(
+        controller: passwordController,
+        obscureText: !_isPasswordVisible,
+        validator:
+            (value) =>
+                value == null || value.isEmpty ? "Password is required" : null,
+        decoration: InputDecoration(
+          labelText: "Password",
+          labelStyle: const TextStyle(color: Colors.black),
+          border: const UnderlineInputBorder(),
+          contentPadding: const EdgeInsets.symmetric(vertical: 15),
+          suffixIcon: IconButton(
+            icon: Icon(
+              _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+              color: Colors.black,
             ),
+            onPressed: () {
+              setState(() {
+                _isPasswordVisible = !_isPasswordVisible;
+              });
+            },
           ),
         ),
-        TextButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ForgotPasswordPage()),
-            );
-          },
-          child: const Text("Forgot Password?", style: TextStyle(color: Colors.black)),
-        ),
-      ],
-    ),
-  );
-}
-
-
-  InputDecoration _buildTransparentInputDecoration(String label) {
-    return InputDecoration(
-      labelText: label,
-      labelStyle: const TextStyle(color: Colors.black),
-      border: const UnderlineInputBorder(),
-      contentPadding: const EdgeInsets.symmetric(vertical: 15),
+      ),
     );
   }
 
-  Widget _buildLoginButton() {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color.fromARGB(255, 102, 76, 68),
-        elevation: 4,
-        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+  Widget _buildForgotPasswordButton() {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: TextButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ForgotPasswordPage()),
+          );
+        },
+        child: const Text(
+          "Forgot Password?",
+          style: TextStyle(fontSize: 16, color: Colors.black),
+        ),
       ),
-      onPressed: () {
-        if (_formKey.currentState!.validate()) {
-          Fluttertoast.showToast(msg: "Logged in successfully!");
-          Navigator.pushNamed(context, '/homescreen');
-        }
-      },
-      child: const Text("Login", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
     );
   }
 }

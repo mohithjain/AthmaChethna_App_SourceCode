@@ -1,7 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'login.dart'; // Redirect to login after reset
 
 class ResetPasswordPage extends StatefulWidget {
-  const ResetPasswordPage({super.key});
+  final String email;
+  const ResetPasswordPage({required this.email, super.key});
 
   @override
   State<ResetPasswordPage> createState() => _ResetPasswordPageState();
@@ -9,12 +13,14 @@ class ResetPasswordPage extends StatefulWidget {
 
 class _ResetPasswordPageState extends State<ResetPasswordPage> {
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   String? _passwordError;
   String? _confirmPasswordError;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -24,32 +30,78 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   }
 
   bool _isPasswordStrong(String password) {
-    final passwordRegex = RegExp(r'^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#\$&*~]).{8,}$');
+    final passwordRegex = RegExp(
+      r'^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#\$&*~]).{8,}$',
+    );
     return passwordRegex.hasMatch(password);
   }
 
-  void _continue() {
-    String password = _passwordController.text;
-    String confirmPassword = _confirmPasswordController.text;
+  Future<void> _resetPassword() async {
+    String password = _passwordController.text.trim();
+    String confirmPassword = _confirmPasswordController.text.trim();
+
     setState(() {
       _passwordError = null;
       _confirmPasswordError = null;
-
-      if (!_isPasswordStrong(password)) {
-        _passwordError = 'Password must be at least 8 characters long and include a letter, number, and special character.';
-      } else if (password != confirmPassword) {
-        _confirmPasswordError = 'Passwords do not match!';
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Password reset successfully!')),
-        );
-        _passwordController.clear();
-        _confirmPasswordController.clear();
-        Future.delayed(const Duration(seconds: 1), () {
-          Navigator.pushReplacementNamed(context, '/login');
-        });
-      }
     });
+
+    if (password.isEmpty || confirmPassword.isEmpty) {
+      showToast("Please fill in all fields");
+      return;
+    }
+
+    if (!_isPasswordStrong(password)) {
+      setState(() {
+        _passwordError =
+            'Password must be at least 8 characters long and include a letter, number, and special character.';
+      });
+      return;
+    }
+
+    if (password != confirmPassword) {
+      setState(() {
+        _confirmPasswordError = 'Passwords do not match!';
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://192.168.31.52:5000/api/auth/reset-password'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"email": widget.email, "newPassword": password}),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        showToast("Password reset successful! Please log in.");
+        Future.delayed(const Duration(seconds: 1), () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => LoginScreen()),
+          );
+        });
+      } else {
+        showToast(data["message"]);
+      }
+    } catch (e) {
+      showToast("Failed to reset password. Check your internet connection.");
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void showToast(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -73,7 +125,10 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                   top: 50,
                   left: 10,
                   child: IconButton(
-                    icon: const Icon(Icons.arrow_back, color: const Color(0xFFFCEBCB)),
+                    icon: const Icon(
+                      Icons.arrow_back,
+                      color: Color(0xFFFCEBCB),
+                    ),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ),
@@ -85,7 +140,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                     child: Text(
                       'Reset Password',
                       style: TextStyle(
-                        color: const Color(0xFFFCEBCB),
+                        color: Color(0xFFFCEBCB),
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
@@ -103,12 +158,12 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                 color: Colors.brown,
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
               child: Text(
                 'Your new password must be at least 8 characters long and include a letter, number, and special character.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Colors.grey),
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
               ),
             ),
             Padding(
@@ -123,7 +178,9 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                   errorText: _passwordError,
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      _obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
                     ),
                     onPressed: () {
                       setState(() {
@@ -146,7 +203,9 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                   errorText: _confirmPasswordError,
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                      _obscureConfirmPassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
                     ),
                     onPressed: () {
                       setState(() {
@@ -163,17 +222,25 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                 width: double.infinity,
                 height: screenHeight * 0.06,
                 child: ElevatedButton(
-                  onPressed: _continue,
+                  onPressed: _isLoading ? null : _resetPassword,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.brown,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(100),
                     ),
                   ),
-                  child: const Text(
-                    'Continue',
-                    style: TextStyle(color: const Color(0xFFFCEBCB), fontSize: 26),
-                  ),
+                  child:
+                      _isLoading
+                          ? const CircularProgressIndicator(
+                            color: Color(0xFFFCEBCB),
+                          )
+                          : const Text(
+                            'Continue',
+                            style: TextStyle(
+                              color: Color(0xFFFCEBCB),
+                              fontSize: 26,
+                            ),
+                          ),
                 ),
               ),
             ),
@@ -190,12 +257,16 @@ class TopWaveClipper extends CustomClipper<Path> {
     Path path = Path();
     path.lineTo(0, size.height - 40);
     path.quadraticBezierTo(
-      size.width / 4, size.height,
-      size.width / 2, size.height - 40,
+      size.width / 4,
+      size.height,
+      size.width / 2,
+      size.height - 40,
     );
     path.quadraticBezierTo(
-      size.width * 3 / 4, size.height - 80,
-      size.width, size.height - 40,
+      size.width * 3 / 4,
+      size.height - 80,
+      size.width,
+      size.height - 40,
     );
     path.lineTo(size.width, 0);
     path.close();

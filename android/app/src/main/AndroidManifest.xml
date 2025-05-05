@@ -7,7 +7,7 @@
     <application
         android:usesCleartextTraffic="true"
         android:requestLegacyExternalStorage="true"
-        android:label="soulease_bms"
+        android:label="Atma Chetana"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         

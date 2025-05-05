@@ -1,12 +1,15 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
+import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'congo.dart';
-import 'login.dart';
 
 class EmailVerificationPage extends StatefulWidget {
-  const EmailVerificationPage({super.key});
+  final String email;
+
+  const EmailVerificationPage({super.key, required this.email});
 
   @override
   State<EmailVerificationPage> createState() => _EmailVerificationPageState();
@@ -14,61 +17,109 @@ class EmailVerificationPage extends StatefulWidget {
 
 class _EmailVerificationPageState extends State<EmailVerificationPage> {
   String otpCode = "";
+  bool _isVerifying = false;
+  bool _isResending = false;
 
   Future<void> _promptAutoReadPermission() async {
     bool granted = await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Auto-Read OTP'),
-        content: const Text('Allow the app to read OTP automatically?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('No'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Auto-Read OTP'),
+            content: const Text('Allow the app to read OTP automatically?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('No'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  var status = await Permission.sms.request();
+                  Navigator.pop(context, status.isGranted);
+                },
+                child: const Text('Yes'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () async {
-              var status = await Permission.sms.request();
-              Navigator.pop(context, status.isGranted);
-            },
-            child: const Text('Yes'),
-          ),
-        ],
-      ),
     );
 
     if (granted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Auto-read enabled')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Auto-read enabled')));
     }
   }
 
-  void _verifyOTP() {
-    if (otpCode.length == 4) {
-      // Show the Fluttertoast message before navigating
-      Fluttertoast.showToast(msg: "Account created successfully!");
+  Future<void> _verifyOTP() async {
+    if (otpCode.length != 4) {
+      Fluttertoast.showToast(msg: "Please enter a valid 4-digit OTP.");
+      return;
+    }
 
-      // Wait for 2 seconds before navigating to the congo screen
-      Future.delayed(const Duration(seconds: 2), () {
+    setState(() => _isVerifying = true);
+
+    final String apiUrl = "http://192.168.31.52:5000/api/auth/verify-otp";
+    final Map<String, dynamic> otpData = {
+      "email": widget.email,
+      "otp": otpCode,
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(otpData),
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        Fluttertoast.showToast(
+          msg: "OTP Verified! Account created successfully.",
+        );
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => CongoScreen()),
         );
+      } else {
+        Fluttertoast.showToast(
+          msg: responseData['message'] ?? "Invalid OTP. Try again.",
+        );
+      }
+    } catch (error) {
+      Fluttertoast.showToast(msg: "Error: Unable to verify OTP.");
+    } finally {
+      setState(() => _isVerifying = false);
+    }
+  }
 
-        // After 5 seconds on the congo screen, navigate to the login page
-        Future.delayed(const Duration(seconds: 5), () {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => LoginScreen()), // Replace with your login page
-          );
-        });
-      });
-    } else {
-      // Show error SnackBar if OTP is invalid
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid 4-digit code.')),
+  Future<void> _resendOTP() async {
+    setState(() => _isResending = true);
+
+    final String apiUrl = "http://192.168.31.52:5000/api/auth/resend-otp";
+    final Map<String, dynamic> requestData = {"email": widget.email};
+
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(requestData),
       );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        Fluttertoast.showToast(msg: "New OTP sent to your email!");
+        setState(() => otpCode = ""); // Clear the entered OTP after resending
+      } else {
+        Fluttertoast.showToast(
+          msg: responseData['message'] ?? "Failed to resend OTP.",
+        );
+      }
+    } catch (error) {
+      Fluttertoast.showToast(msg: "Error: Unable to resend OTP.");
+    } finally {
+      setState(() => _isResending = false);
     }
   }
 
@@ -93,16 +144,17 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                   clipper: WaveClipper(),
                   child: Container(
                     height: screenHeight * 0.25,
-                    decoration: const BoxDecoration(
-                      color: Colors.brown,
-                    ),
+                    decoration: const BoxDecoration(color: Colors.brown),
                   ),
                 ),
                 Positioned(
                   top: 60,
                   left: 20,
                   child: IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Color(0xFFFCEBCB)),
+                    icon: const Icon(
+                      Icons.arrow_back,
+                      color: Color(0xFFFCEBCB),
+                    ),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ),
@@ -152,14 +204,10 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
               },
             ),
             TextButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Email resent')),
-                );
-              },
-              child: const Text(
-                'Resend',
-                style: TextStyle(color: Colors.brown),
+              onPressed: _isResending ? null : _resendOTP,
+              child: Text(
+                _isResending ? 'Resending...' : 'Resend',
+                style: const TextStyle(color: Colors.brown),
               ),
             ),
             Padding(
@@ -168,16 +216,19 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                 width: double.infinity,
                 height: screenHeight * 0.06,
                 child: ElevatedButton(
-                  onPressed: _verifyOTP,
+                  onPressed: _isVerifying ? null : _verifyOTP,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.brown,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(26),
                     ),
                   ),
-                  child: const Text(
-                    'Verify and Proceed',
-                    style: TextStyle(color: Color(0xFFFCEBCB), fontSize: 18),
+                  child: Text(
+                    _isVerifying ? 'Verifying...' : 'Verify and Proceed',
+                    style: const TextStyle(
+                      color: Color(0xFFFCEBCB),
+                      fontSize: 18,
+                    ),
                   ),
                 ),
               ),
@@ -195,17 +246,18 @@ class WaveClipper extends CustomClipper<Path> {
   Path getClip(Size size) {
     var path = Path();
     path.lineTo(0, size.height - 40);
-
-    var firstControlPoint = Offset(size.width / 4, size.height);
-    var firstEndPoint = Offset(size.width / 2, size.height - 30);
     path.quadraticBezierTo(
-        firstControlPoint.dx, firstControlPoint.dy, firstEndPoint.dx, firstEndPoint.dy);
-
-    var secondControlPoint = Offset(size.width * 3 / 4, size.height - 80);
-    var secondEndPoint = Offset(size.width, size.height - 40);
+      size.width / 4,
+      size.height,
+      size.width / 2,
+      size.height - 30,
+    );
     path.quadraticBezierTo(
-        secondControlPoint.dx, secondControlPoint.dy, secondEndPoint.dx, secondEndPoint.dy);
-
+      size.width * 3 / 4,
+      size.height - 80,
+      size.width,
+      size.height - 40,
+    );
     path.lineTo(size.width, 0);
     path.close();
     return path;

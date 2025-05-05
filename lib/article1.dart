@@ -17,21 +17,33 @@ class Article1Screen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF8EFE3),
-      appBar: AppBar(
-        backgroundColor: Color(0xFFF8EFE3),
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Color(0xFF6D4C41)), // Darker brown color for icon
-          onPressed: () {
-            Navigator.pop(context);
-          },
+      backgroundColor: Color(0xFFF2EDE5),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(120), // Increased height
+        child: AppBar(
+          backgroundColor: Colors.brown,
+          elevation: 0,
+          centerTitle: true,
+          flexibleSpace: Align(
+            alignment: Alignment.bottomCenter, // Moves the title downward
+            child: Padding(
+              padding: EdgeInsets.only(bottom: 30), // Adjust this value as needed
+              child: Text(
+                "Benefits Of Meditation",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: MediaQuery.of(context).size.width * 0.07,
+                  fontWeight: FontWeight.bold,
+                  color: Color.fromARGB(255, 246, 223, 153),
+                ),
+              ),
+            ),
+          ),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: Color.fromARGB(255, 246, 223, 153)),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
         ),
-        title: Text(
-          'Article 1',
-          style: TextStyle(color: Color(0xFF6D4C41), fontWeight: FontWeight.bold, fontSize: 24), // Darker brown color for title
-        ),
-        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -39,15 +51,7 @@ class Article1Screen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Benefits Of Meditation',
-                style: TextStyle(
-                  fontSize: 36, // Increased font size
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF6D4C41), // Darker brown color for text
-                ),
-              ),
-              SizedBox(height: 26),
+              
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

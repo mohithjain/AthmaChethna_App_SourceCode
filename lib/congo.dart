@@ -11,7 +11,10 @@ class _CongoScreenState extends State<CongoScreen> {
   void initState() {
     super.initState();
     Timer(Duration(seconds: 5), () {
-      Navigator.pushReplacementNamed(context, '/login'); // 5 sec ke baad login page
+      Navigator.pushReplacementNamed(
+        context,
+        '/login',
+      ); // 5 sec ke baad login page
     });
   }
 
@@ -23,16 +26,16 @@ class _CongoScreenState extends State<CongoScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset("images/congo.png", height: 350), // Ensure image is in assets
+            Image.asset(
+              "images/congo.png",
+              height: 350,
+            ), // Ensure image is in assets
             SizedBox(height: 40),
             Text(
-              "Welcome to the SoulEase Family!",
+              "Welcome to the Atma Chetana!",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            Text(
-              "💛",
-              style: TextStyle(fontSize: 40),
-            ),
+            Text("💛", style: TextStyle(fontSize: 40)),
             SizedBox(height: 15),
             Text(
               "We’re so glad to have you with us—\nlet’s grow, heal, and thrive together!",
@@ -40,7 +43,6 @@ class _CongoScreenState extends State<CongoScreen> {
               style: TextStyle(fontSize: 18),
             ),
             SizedBox(height: 30),
-            
           ],
         ),
       ),

@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_custom_clippers/flutter_custom_clippers.dart';
+import 'package:http/http.dart' as http;
 import 'emailverify.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
@@ -12,7 +14,9 @@ class ForgotPasswordPage extends StatefulWidget {
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final TextEditingController _emailController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
 
+  // Function to validate email
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
       return "Please enter your email";
@@ -22,22 +26,49 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     return null;
   }
 
- void _recoverPassword() {
-  if (_formKey.currentState!.validate()) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Password recovery email sent!")),
-    );
+  // Function to send OTP for password recovery
+  Future<void> _sendResetOTP() async {
+    if (!_formKey.currentState!.validate()) return;
 
-    // Navigate to EmailVerifyPage after a short delay
-    Future.delayed(const Duration(seconds: 1), () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => EmailVerificationPage()),
-      );
+    final String email = _emailController.text.trim();
+    setState(() {
+      _isLoading = true;
     });
-  }
-}
 
+    try {
+      final response = await http.post(
+        Uri.parse('http://192.168.31.52:5000/api/auth/forgotpassword'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"email": email}),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        _showToast("OTP sent to your email");
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EmailVerificationPage(email: email),
+          ),
+        );
+      } else {
+        _showToast(data["message"]);
+      }
+    } catch (e) {
+      _showToast("Failed to send OTP. Check your internet connection.");
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Function to show toast message
+  void _showToast(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,20 +96,25 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       top: 40,
                       left: 10,
                       child: IconButton(
-                        icon: const Icon(Icons.arrow_back, color: const Color(0xFFF6D89E)),
-                        onPressed: () {},
+                        icon: const Icon(
+                          Icons.arrow_back,
+                          color: Color(0xFFF6D89E),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
                       ),
                     ),
                     Positioned(
-                      top: 110,  // Lowered the text by increasing top padding
+                      top: 110,
                       left: 0,
                       right: 0,
                       child: const Center(
                         child: Text(
                           "Forgot Password",
                           style: TextStyle(
-                            color: const Color(0xFFF6D89E),
-                            fontSize: 32, // Increased font size from 22 to 26
+                            color: Color(0xFFF6D89E),
+                            fontSize: 32,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -104,10 +140,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       const Text(
                         "Enter the email address associated\nwith your account.",
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
                       ),
                       SizedBox(height: screenHeight * 0.04),
                       Form(
@@ -115,7 +148,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                         child: TextFormField(
                           controller: _emailController,
                           decoration: InputDecoration(
-                            prefixIcon: const Icon(Icons.email_outlined, color: Colors.grey),
+                            prefixIcon: const Icon(
+                              Icons.email_outlined,
+                              color: Colors.grey,
+                            ),
                             hintText: "example@bmsce.ac.in",
                             filled: true,
                             fillColor: const Color(0xFFF6D89E),
@@ -133,17 +169,27 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                         width: double.infinity,
                         height: screenHeight * 0.06,
                         child: ElevatedButton(
-                          onPressed: _recoverPassword,
+                          onPressed: _isLoading ? null : _sendResetOTP,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.brown,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
-                          child: const Text(
-                            "Recover Password",
-                            style: TextStyle(fontSize: 16, color: const Color(0xFFF6D89E)),
-                          ),
+                          child:
+                              _isLoading
+                                  ? const CircularProgressIndicator(
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  )
+                                  : const Text(
+                                    "Recover Password",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Color(0xFFF6D89E),
+                                    ),
+                                  ),
                         ),
                       ),
                     ],

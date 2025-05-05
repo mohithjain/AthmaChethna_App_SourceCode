@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'signupverify.dart';
 
 class CreateAccountPage extends StatefulWidget {
@@ -11,7 +12,9 @@ class CreateAccountPage extends StatefulWidget {
 
 class _CreateAccountPageState extends State<CreateAccountPage> {
   final _formKey = GlobalKey<FormState>();
+  // ignore: unused_field
   bool _isPasswordVisible = false;
+  // ignore: unused_field
   bool _isConfirmPasswordVisible = false;
   String? _selectedSem;
 
@@ -33,7 +36,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
       body: Stack(
         children: [
           Opacity(
-            opacity: 0.5, // Set opacity to 10%
+            opacity: 0.5,
             child: Container(
               decoration: const BoxDecoration(
                 image: DecorationImage(
@@ -74,6 +77,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
       ),
     );
   }
+
   Widget _buildTabBar() {
     return Container(
       width: double.infinity,
@@ -132,68 +136,101 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         children: [
           _buildTextField(nameController, "Name", TextInputType.name, (value) {
             if (value!.isEmpty) return "Name is required";
-            if (!RegExp(r"^[A-Za-z ]+$").hasMatch(value)) return "Enter only alphabets";
+            if (!RegExp(r"^[A-Za-z ]+$").hasMatch(value))
+              return "Enter only alphabets";
             return null;
           }),
-          _buildTextField(usernameController, "Username", TextInputType.text, (value) {
+          _buildTextField(usernameController, "Username", TextInputType.text, (
+            value,
+          ) {
             if (value!.isEmpty) return "Username is required";
-            if (!RegExp(r"^[A-Za-z0-9]+$").hasMatch(value)) return "Use only letters and numbers";
+            if (!RegExp(r"^[A-Za-z0-9]+$").hasMatch(value))
+              return "Use only letters and numbers";
             return null;
           }),
           _buildPasswordField(),
           _buildConfirmPasswordField(),
-          _buildDropdownField(),
-          _buildEmailField(),
-          _buildTextField(departmentController, "Department", TextInputType.text, (value) {
-            return value!.isNotEmpty ? null : "Department is required";
-          }),
-          _buildTextField(phoneController, "Phone Number", TextInputType.phone, (value) {
-            if (value!.isEmpty) return "Phone number is required";
-            if (!RegExp(r"^[0-9]{10}$").hasMatch(value)) return "Enter a valid 10-digit number";
-            return null;
-          }),
+          _buildDropdownField(), //Semester dropdwon
+          _buildDepartmentDropdown(), //department dropdown
+          _buildTextField(
+            emailController,
+            "College Email",
+            TextInputType.emailAddress,
+            (value) {
+              if (value!.isEmpty) return "Email is required";
+              return null;
+            },
+          ),
+          //_buildTextField(
+          //departmentController,
+          //"Department",
+          //TextInputType.text,
+          //(value) {
+          //return value!.isNotEmpty ? null : "Department is required";
+          //},
+          //),
+          _buildTextField(
+            phoneController,
+            "Phone Number",
+            TextInputType.phone,
+            (value) {
+              if (value!.isEmpty) return "Phone number is required";
+              if (!RegExp(r"^[0-9]{10}$").hasMatch(value))
+                return "Enter a valid 10-digit number";
+              return null;
+            },
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, TextInputType keyboardType, String? Function(String?) validator) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label,
+    TextInputType type,
+    String? Function(String?)? validator,
+  ) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
         controller: controller,
-        keyboardType: keyboardType,
+        keyboardType: type,
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(),
+        ),
         validator: validator,
-        decoration: _buildTransparentInputDecoration(label),
       ),
     );
   }
 
   Widget _buildPasswordField() {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      //padding: const EdgeInsets.only(bottom: 15),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
-        keyboardType: TextInputType.text,
-        textInputAction: TextInputAction.done, // Prevents extra toolbar
-        toolbarOptions: const ToolbarOptions(
-        copy: false,
-        cut: false,
-        paste: false,
-        selectAll: false,
-        ),
-
         controller: passwordController,
+        keyboardType: TextInputType.visiblePassword,
         obscureText: !_isPasswordVisible,
         validator: (value) {
           if (value!.isEmpty) return "Password is required";
-          if (!RegExp(r'^(?=.*?[A-Z])(?=.*?[0-9])(?=.*?[!@#\$&*~]).{8,}$').hasMatch(value)) {
-            return "Weak password: Use uppercase, number, special char";
-          }
+          if (value.length < 6) return "Password must be at least 6 characters";
           return null;
         },
-        decoration: _buildTransparentInputDecoration("Password").copyWith(
+        decoration: InputDecoration(
+          labelText: "Password",
+          labelStyle: const TextStyle(color: Color.fromARGB(255, 51, 51, 51)),
+          border: const OutlineInputBorder(),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 15,
+            horizontal: 10,
+          ),
           suffixIcon: IconButton(
-            icon: Icon(_isPasswordVisible ? Icons.visibility : Icons.visibility_off),
+            icon: Icon(
+              _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+              color: const Color.fromARGB(255, 51, 51, 51),
+            ),
             onPressed: () {
               setState(() {
                 _isPasswordVisible = !_isPasswordVisible;
@@ -207,18 +244,32 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
   Widget _buildConfirmPasswordField() {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      //padding: const EdgeInsets.only(bottom: 15),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
         controller: confirmPasswordController,
+        keyboardType: TextInputType.visiblePassword,
         obscureText: !_isConfirmPasswordVisible,
         validator: (value) {
-          if (value!.isEmpty) return "Confirm your password";
+          if (value!.isEmpty) return "Please confirm your password";
           if (value != passwordController.text) return "Passwords do not match";
           return null;
         },
-        decoration: _buildTransparentInputDecoration("Confirm Password").copyWith(
+        decoration: InputDecoration(
+          labelText: "Confirm Password",
+          labelStyle: const TextStyle(color: Color.fromARGB(255, 51, 51, 51)),
+          border: const OutlineInputBorder(),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 15,
+            horizontal: 10,
+          ),
           suffixIcon: IconButton(
-            icon: Icon(_isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off),
+            icon: Icon(
+              _isConfirmPasswordVisible
+                  ? Icons.visibility
+                  : Icons.visibility_off,
+              color: const Color.fromARGB(255, 51, 51, 51),
+            ),
             onPressed: () {
               setState(() {
                 _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
@@ -230,82 +281,171 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     );
   }
 
-Widget _buildDropdownField() {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 12),
-    child: DropdownButtonFormField<String>(
-      value: _selectedSem,
-      decoration: _buildTransparentInputDecoration("Semester"), // Matching other fields
-      items: List.generate(8, (index) {
-        return DropdownMenuItem(
-          value: "${index + 1}",
-          child: Text(
-            "${index + 1}", // Only numbers displayed
-            style: const TextStyle(fontSize: 16), // Match text size
-          ),
-        );
-      }),
-      onChanged: (value) {
-        setState(() {
-          _selectedSem = value;
-        });
-      },
-      validator: (value) => value == null ? "Select a semester" : null,
-      dropdownColor: const Color(0xFFFCEBCB), // Match background color
-      menuMaxHeight: 150, // Compact dropdown height
-    ),
-  );
-}
-
-
-  Widget _buildEmailField() {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 10),
-    child: TextFormField(
-      controller: emailController,
-      keyboardType: TextInputType.text,
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return "Email prefix is required";
-        }
-        if (!RegExp(r"^[a-zA-Z0-9.]+$").hasMatch(value)) {
-          return "Only letters, numbers, and dots allowed";
-        }
-        return null;
-      },
-      decoration: _buildTransparentInputDecoration("Email ").copyWith(
-        suffixText: "@bmsce.ac.in",
+  Widget _buildDropdownField() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: DropdownButtonFormField<String>(
+        decoration: const InputDecoration(
+          border: OutlineInputBorder(),
+          labelText: "Semester",
+        ),
+        value: _selectedSem,
+        items:
+            ["1", "2", "3", "4", "5", "6", "7", "8"].map((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text("Semester $value"),
+              );
+            }).toList(),
+        onChanged: (newValue) {
+          setState(() {
+            _selectedSem = newValue;
+          });
+        },
+        validator: (value) => value == null ? "Please select a semester" : null,
       ),
-    ),
-  );
-}
+    );
+  }
 
+  // Department dropdown
+  Widget _buildDepartmentDropdown() {
+    List<String> departments = [
+      "Aerospace Engineering",
+      "Artificial Intelligence and Data Science",
+      "Bio-Technology",
+      "Chemical Engineering",
+      "Civil Engineering",
+      "Computer Applications (MCA)",
+      "Computer Science and Business Systems",
+      "Computer Science and Engineering",
+      "Computer Science and Engineering (DS)",
+      "Computer Science and Engineering (IoT and CS)",
+      "Electrical and Electronics Engineering",
+      "Electronics and Communication Engineering",
+      "Electronics and Instrumentation Engineering",
+      "Electronics and Telecommunication Engineering",
+      "Industrial Engineering and Management",
+      "Information Science and Engineering",
+      "Machine Learning (AI and ML)",
+      "Management Studies and Research Centre",
+      "Mechanical Engineering",
+      "Medical Electronics Engineering",
+      "Physics Department",
+      "Chemistry Department",
+      "Mathematics Department",
+    ];
 
-  InputDecoration _buildTransparentInputDecoration(String label) {
-    return InputDecoration(
-      labelText: label,
-      border: UnderlineInputBorder(),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Container(
+        width:
+            double
+                .infinity, // Ensures the dropdown takes full width of the container
+        child: DropdownButtonFormField<String>(
+          decoration: InputDecoration(
+            border: OutlineInputBorder(),
+            labelText: "Department",
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: 10.0,
+            ), // Adjust padding to prevent overflow
+          ),
+          value:
+              departmentController.text.isEmpty
+                  ? null
+                  : departmentController.text,
+          items:
+              departments.map((String department) {
+                return DropdownMenuItem<String>(
+                  value: department,
+                  child: Text(
+                    department,
+                    overflow:
+                        TextOverflow
+                            .ellipsis, // Ensures the text is truncated if too long
+                    style: TextStyle(
+                      fontSize: 14,
+                    ), // Reduces the font size to fit within the container
+                  ),
+                );
+              }).toList(),
+          onChanged: (newValue) {
+            setState(() {
+              departmentController.text = newValue!;
+            });
+          },
+          validator:
+              (value) =>
+                  value == null || value.isEmpty
+                      ? "Please select a department"
+                      : null,
+        ),
+      ),
     );
   }
 
   Widget _buildContinueButton() {
-  return ElevatedButton(
-    style: ElevatedButton.styleFrom(
-      backgroundColor: const Color.fromARGB(255, 102, 76, 68),
-    ),
-    onPressed: () {
-      if (_formKey.currentState!.validate()) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => EmailVerificationPage()), // Navigate to congo.dart
-        );
-      }
-    },
-    child: const Text(
-      "Continue",
-      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 43, 42, 42)),
-    ),
-  );
-}
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color.fromARGB(255, 102, 76, 68),
+      ),
+      onPressed: () async {
+        if (_formKey.currentState!.validate()) {
+          bool success = await _signupUser(); // Now it returns a bool
+          if (success) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (context) =>
+                        EmailVerificationPage(email: emailController.text),
+              ),
+            );
+          }
+        }
+      },
+      child: const Text(
+        "Continue",
+        style: TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
+          color: Color.fromARGB(255, 43, 42, 42),
+        ),
+      ),
+    );
+  }
 
+  Future<bool> _signupUser() async {
+    try {
+      final response = await http.post(
+        Uri.parse("http://192.168.31.52:5000/api/auth/signup"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "name": nameController.text,
+          "username": usernameController.text,
+          "password": passwordController.text,
+          "email": emailController.text,
+          "semester": _selectedSem,
+          "department": departmentController.text,
+          "phone": phoneController.text,
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        _showSnackBar("Signup successful! Redirecting to OTP verification...");
+        return true;
+      } else {
+        _showSnackBar("Signup failed. Try again.");
+        return false;
+      }
+    } catch (e) {
+      _showSnackBar("Signup Error: $e");
+      return false;
+    }
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), duration: const Duration(seconds: 3)),
+    );
+  }
 }

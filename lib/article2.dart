@@ -17,21 +17,33 @@ class Article2Screen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF8EFE3),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Color(0xFF6D4C41)), // Darker brown color for icon
-          onPressed: () {
-            Navigator.pop(context);
-          },
+      backgroundColor: Color(0xFFF2EDE5),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(160), // Increased height
+        child: AppBar(
+          backgroundColor: Colors.brown,
+          elevation: 0,
+          centerTitle: true,
+          flexibleSpace: Align(
+            alignment: Alignment.bottomCenter, // Moves the title downward
+            child: Padding(
+              padding: EdgeInsets.only(bottom: 30), // Adjust this value as needed
+              child: Text(
+                "Finding Joy In Everyday Moment",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: MediaQuery.of(context).size.width * 0.07,
+                  fontWeight: FontWeight.bold,
+                  color: Color.fromARGB(255, 246, 223, 153),
+                ),
+              ),
+            ),
+          ),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: Color.fromARGB(255, 246, 223, 153)),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
         ),
-        title: Text(
-          'Article 2',
-          style: TextStyle(color: Color(0xFF6D4C41), fontWeight: FontWeight.bold, fontSize: 24), // Darker brown color for title
-        ),
-        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -39,15 +51,7 @@ class Article2Screen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Finding Joy In Everyday Moment',
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF6D4C41), // Darker brown color for text
-                ),
-              ),
-              SizedBox(height: 26),
+            
               Image.asset(
                 'images/arti2.png', // Replace with the actual image path
                 width: double.infinity,

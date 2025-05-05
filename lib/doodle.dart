@@ -46,11 +46,22 @@ class _DoodlePageState extends State<DoodlePage> {
                         Wrap(
                           spacing: 8,
                           children: [
-                            _buildColorButton(Colors.white),
-                            _buildColorButton(Colors.yellow),
-                            _buildColorButton(Colors.blue),
-                            _buildColorButton(Colors.green),
-                            _buildColorButton(Colors.pink),
+                            _buildCanvasColorButton(Colors.white),
+                            _buildCanvasColorButton(Colors.yellow),
+                            _buildCanvasColorButton(Colors.blue),
+                            _buildCanvasColorButton(Colors.green),
+                            _buildCanvasColorButton(Colors.pink),
+                            _buildCanvasColorButton(Colors.brown),
+                            _buildCanvasColorButton(Colors.black),
+                            _buildCanvasColorButton(Colors.orange),
+                            _buildCanvasColorButton(Colors.teal),
+                            _buildCanvasColorButton(Colors.grey),
+                            _buildCanvasColorButton(Colors.deepPurple),
+                            _buildCanvasColorButton(Colors.redAccent),
+                            _buildCanvasColorButton(Colors.amber),
+                            _buildCanvasColorButton(Colors.purple),
+                            _buildCanvasColorButton(Colors.deepOrange),
+                            _buildCanvasColorButton(Colors.blueGrey),
                           ],
                         ),
                       ],
@@ -75,11 +86,38 @@ class _DoodlePageState extends State<DoodlePage> {
                         Wrap(
                           spacing: 8,
                           children: [
-                            _buildEmojiButton('😀'),
-                            _buildEmojiButton('😍'),
-                            _buildEmojiButton('😂'),
-                            _buildEmojiButton('😎'),
-                            _buildEmojiButton('🤩'),
+                            _buildEmojiButton('😀'), // Grinning face
+                            _buildEmojiButton('😍'), // Heart eyes
+                            _buildEmojiButton('😂'), // Tears of joy
+                            _buildEmojiButton('😎'), // Cool face
+                            _buildEmojiButton('🤩'), // Star-struck
+                            _buildEmojiButton('😊'), // Smiling face
+                            _buildEmojiButton('😘'), // Kissing face
+                            _buildEmojiButton('😜'), // Winking face with tongue
+                            _buildEmojiButton('🤔'), // Thinking face
+                            _buildEmojiButton('😏'), // Smirking face
+                            _buildEmojiButton('😢'), // Crying face
+                            _buildEmojiButton('😡'), // Angry face
+                            _buildEmojiButton('🤯'), // Exploding head
+                            _buildEmojiButton('🥳'), // Party face
+                            _buildEmojiButton('🥺'), // Pleading face
+                            _buildEmojiButton('🤗'), // Hugging face
+                            _buildEmojiButton('🤠'), // Cowboy face
+                            _buildEmojiButton('😇'), // Smiling face with halo
+                            _buildEmojiButton('🤡'), // Clown face
+                            _buildEmojiButton('👻'), // Ghost
+                            _buildEmojiButton('💩'), // Pile of poo
+                            _buildEmojiButton('👏'), // Clapping hands
+                            _buildEmojiButton('🙌'), // Raising hands
+                            _buildEmojiButton('👍'), // Thumbs up
+                            _buildEmojiButton('👎'), // Thumbs down
+                            _buildEmojiButton('❤️'), // Red heart
+                            _buildEmojiButton('🔥'), // Fire
+                            _buildEmojiButton('🌈'), // Rainbow
+                            _buildEmojiButton('🎉'), // Party popper
+                            _buildEmojiButton('💯'), // Hundred points
+                            _buildEmojiButton('🦋'), // Butterfly
+                            _buildEmojiButton('🚀'), // Rocket
                           ],
                         ),
                       ],
@@ -104,11 +142,37 @@ class _DoodlePageState extends State<DoodlePage> {
                         Wrap(
                           spacing: 8,
                           children: [
-                            _buildStickerButton(Icons.star, Colors.yellow),
-                            _buildStickerButton(Icons.favorite, Colors.red),
-                            _buildStickerButton(Icons.thumb_up, Colors.blue),
-                            _buildStickerButton(Icons.face, Colors.green),
-                            _buildStickerButton(Icons.pets, Colors.brown),
+                            _buildStickerButton(Icons.star, Colors.yellow), // Star icon
+                            _buildStickerButton(Icons.favorite, Colors.red), // Heart icon (red)
+                            _buildStickerButton(Icons.thumb_up, Colors.blue), // Thumbs up icon
+                            _buildStickerButton(Icons.face, Colors.green), // Smiley face icon
+                            _buildStickerButton(Icons.pets, Colors.brown), // Pets icon
+                            _buildStickerButton(Icons.add_photo_alternate_outlined, Colors.black), // Add photo icon
+                            _buildStickerButton(Icons.account_tree, Colors.black), // Account tree icon
+                            _buildStickerButton(Icons.accessibility_new, Colors.black), // Accessibility icon
+                            _buildStickerButton(Icons.home, Colors.black), // Home icon
+                            _buildStickerButton(Icons.access_time_filled, Colors.black), // Time icon
+                            _buildStickerButton(Icons.add_comment, Colors.black), // Add comment icon
+                            _buildStickerButton(Icons.abc_rounded, Colors.black), // ABC icon
+                            _buildStickerButton(Icons.people, Colors.purple), // People/relationship icon
+                            _buildStickerButton(Icons.group_add, Colors.green), // Group add icon
+                            _buildStickerButton(Icons.heart_broken, Colors.red), // Broken heart icon
+                            _buildStickerButton(Icons.calendar_today, Colors.blue), // Calendar icon
+                            _buildStickerButton(Icons.timer, Colors.yellow), // Timer icon
+                            _buildStickerButton(Icons.watch_later, Colors.black), // Watch later icon
+                            _buildStickerButton(Icons.fitness_center, Colors.green), // Fitness icon
+                            _buildStickerButton(Icons.health_and_safety, Colors.red), // Health and safety icon
+                            _buildStickerButton(Icons.local_hospital, Colors.blue), // Hospital icon
+                            _buildStickerButton(Icons.medication, Colors.purple), // Medication icon
+                            _buildStickerButton(Icons.self_improvement, Colors.green), // Self-improvement icon
+                            _buildStickerButton(Icons.nature_people, Colors.brown), // Nature and people icon
+                            _buildStickerButton(Icons.emoji_people, Colors.yellow), // Emoji people icon
+                            _buildStickerButton(Icons.emoji_emotions, Colors.purple), // Emoji emotions icon
+                            _buildStickerButton(Icons.emoji_objects, Colors.blue), // Emoji objects icon
+                            _buildStickerButton(Icons.emoji_food_beverage, Colors.green), // Food and beverage icon
+                            _buildStickerButton(Icons.emoji_transportation, Colors.black), // Transportation icon
+                            _buildStickerButton(Icons.emoji_symbols, Colors.yellow), // Symbols icon
+                            _buildStickerButton(Icons.emoji_flags, Colors.red), // Flags icon
                           ],
                         ),
                       ],
@@ -195,28 +259,35 @@ class _DoodlePageState extends State<DoodlePage> {
                           Wrap(
                             spacing: 8,
                             children: [
-                              _buildColorButton(Colors.black),
-                              _buildColorButton(Colors.red),
-                              _buildColorButton(Colors.blue),
-                              _buildColorButton(Colors.green),
-                              _buildColorButton(Colors.purple),
-                              _buildColorButton(Colors.orange),
-                              _buildColorButton(Colors.yellow),
-                              _buildColorButton(Colors.brown),
-                              _buildColorButton(Colors.grey),
+                              _buildBrushColorButton(Colors.white),
+                              _buildBrushColorButton(Colors.yellow),
+                              _buildBrushColorButton(Colors.blue),
+                              _buildBrushColorButton(Colors.green),
+                              _buildBrushColorButton(Colors.pink),
+                              _buildBrushColorButton(Colors.brown),
+                              _buildBrushColorButton(Colors.black),
+                              _buildBrushColorButton(Colors.orange),
+                              _buildBrushColorButton(Colors.teal),
+                              _buildBrushColorButton(Colors.grey),
+                              _buildBrushColorButton(Colors.deepPurple),
+                              _buildBrushColorButton(Colors.redAccent),
+                              _buildBrushColorButton(Colors.amber),
+                              _buildBrushColorButton(Colors.purple),
+                              _buildBrushColorButton(Colors.deepOrange),
+                              _buildBrushColorButton(Colors.blueGrey),
                             ],
                           ),
                           SizedBox(height: 16),
-                          Text('Brush Size'),
-                          Slider(
-                            value: strokeWidth,
-                            min: 1,
-                            max: 10,
-                            onChanged: (value) {
-                              setState(() {
-                                strokeWidth = value; // Update strokeWidth
-                              });
-                            },
+                          Text('Choose Brush Size'),
+                          Wrap(
+                            spacing: 8,
+                            children: [
+                              _buildBrushSizeButton(2.0),
+                              _buildBrushSizeButton(4.0),
+                              _buildBrushSizeButton(6.0),
+                              _buildBrushSizeButton(8.0),
+                              _buildBrushSizeButton(10.0),
+                            ],
                           ),
                         ],
                       ),
@@ -241,7 +312,7 @@ class _DoodlePageState extends State<DoodlePage> {
     );
   }
 
-  Widget _buildColorButton(Color color) {
+  Widget _buildBrushColorButton(Color color) {
     return InkWell(
       onTap: () {
         setState(() {
@@ -261,11 +332,61 @@ class _DoodlePageState extends State<DoodlePage> {
     );
   }
 
-  Widget _buildEmojiButton(String emoji) {
+  Widget _buildBrushSizeButton(double size) {
     return InkWell(
       onTap: () {
         setState(() {
-          emojis.add(Emoji(emoji, Offset(100, 100)));
+          strokeWidth = size; // Update the strokeWidth
+        });
+        Navigator.pop(context); // Close the bottom sheet
+      },
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.black),
+        ),
+        child: Center(
+          child: Icon(
+            Icons.brush,
+            size: size * 4, // Visual representation of the brush size
+            color: selectedColor,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCanvasColorButton(Color color) {
+    return InkWell(
+      onTap: () {
+        setState(() {
+          canvasColor = color;
+        });
+        Navigator.pop(context);
+      },
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.black),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmojiButton(String emoji) {
+    return InkWell(
+      onTap: () {
+        // Get the center of the screen
+        final RenderBox renderBox = context.findRenderObject() as RenderBox;
+        final Offset center = renderBox.size.center(Offset.zero);
+
+        setState(() {
+          emojis.add(Emoji(emoji, center));
         });
         Navigator.pop(context);
       },
@@ -279,8 +400,12 @@ class _DoodlePageState extends State<DoodlePage> {
   Widget _buildStickerButton(IconData icon, Color color) {
     return InkWell(
       onTap: () {
+        // Get the center of the screen
+        final RenderBox renderBox = context.findRenderObject() as RenderBox;
+        final Offset center = renderBox.size.center(Offset.zero);
+
         setState(() {
-          stickers.add(Sticker(icon, color, Offset(100, 100)));
+          stickers.add(Sticker(icon, color, center));
         });
         Navigator.pop(context);
       },
@@ -336,10 +461,11 @@ class DrawingPainter extends CustomPainter {
         ..color = Colors.grey.withOpacity(0.5)
         ..strokeWidth = 1;
 
-      for (double i = 0; i < size.width; i += 20) {
+      // Increase the grid spacing from 20 to 40
+      for (double i = 0; i < size.width; i += 40) {
         canvas.drawLine(Offset(i, 0), Offset(i, size.height), paint);
       }
-      for (double i = 0; i < size.height; i += 20) {
+      for (double i = 0; i < size.height; i += 40) {
         canvas.drawLine(Offset(0, i), Offset(size.width, i), paint);
       }
     }
